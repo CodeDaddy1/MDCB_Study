@@ -1,0 +1,8 @@
+# Build scripts we intentionally skip:
+#  - sharp / tesseract.js: officeparser's optional OCR deps (material is
+#    text-extractable; OCR is out of scope).
+#  - unrs-resolver: native resolver used only by eslint; not needed to build.
+allowBuilds:
+  sharp: false
+  tesseract.js: false
+  unrs-resolver: false
