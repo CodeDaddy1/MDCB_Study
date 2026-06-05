@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { ingestDocument, extractConcepts } from '@/lib/agents/expert'
 
-// Ingestion (extract → embed) can be slow for large PDFs. Give it headroom;
-// this requires the Vercel Pro plan in production (Hobby caps at ~10s).
-export const maxDuration = 300
+// Ingestion (extract → embed) can be slow for large PDFs. 60s is the Hobby
+// ceiling; on Pro you can raise this to 300 for very large documents.
+export const maxDuration = 60
 
 export async function POST(
   _request: Request,

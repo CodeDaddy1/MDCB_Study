@@ -5,7 +5,7 @@ import { ingestDocument, extractConcepts, type IngestResult } from '@/lib/agents
 // Idempotent cron sweep: pick up documents stuck in 'uploaded' and ingest them,
 // then refresh concepts for any deck that changed. No automatic retries; runs in
 // UTC. Authenticated with CRON_SECRET (this route is excluded from middleware).
-export const maxDuration = 300
+export const maxDuration = 60
 
 const MAX_PER_RUN = 5
 
