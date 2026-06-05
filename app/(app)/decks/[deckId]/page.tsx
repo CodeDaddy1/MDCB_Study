@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { UploadDocument } from '@/components/upload-document'
 import { DocumentsPanel } from '@/components/documents-panel'
+import { GenerateQuestionsButton } from '@/components/generate-questions-button'
 
 export default async function DeckPage({
   params,
@@ -24,23 +25,32 @@ export default async function DeckPage({
   } = await supabase.auth.getUser()
   const isOwner = user?.id === deck.owner_id
 
-  const [{ data: documents }, { data: concepts }, { count: chunkCount }] =
-    await Promise.all([
-      supabase
-        .from('documents')
-        .select('id, filename, status, error')
-        .eq('deck_id', deckId)
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('concepts')
-        .select('id, name, description')
-        .eq('deck_id', deckId)
-        .order('name', { ascending: true }),
-      supabase
-        .from('chunks')
-        .select('id', { count: 'exact', head: true })
-        .eq('deck_id', deckId),
-    ])
+  const [
+    { data: documents },
+    { data: concepts },
+    { count: chunkCount },
+    { count: questionCount },
+  ] = await Promise.all([
+    supabase
+      .from('documents')
+      .select('id, filename, status, error')
+      .eq('deck_id', deckId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('concepts')
+      .select('id, name, description')
+      .eq('deck_id', deckId)
+      .order('name', { ascending: true }),
+    supabase
+      .from('chunks')
+      .select('id', { count: 'exact', head: true })
+      .eq('deck_id', deckId),
+    supabase
+      .from('questions')
+      .select('id', { count: 'exact', head: true })
+      .eq('deck_id', deckId)
+      .eq('verified', true),
+  ])
 
   return (
     <div className="space-y-8">
@@ -63,6 +73,7 @@ export default async function DeckPage({
           <Stat label="documents" value={documents?.length ?? 0} />
           <Stat label="chunks" value={chunkCount ?? 0} />
           <Stat label="concepts" value={concepts?.length ?? 0} />
+          <Stat label="questions" value={questionCount ?? 0} />
         </div>
       </div>
 
@@ -101,6 +112,43 @@ export default async function DeckPage({
             Concepts appear here once a document is processed.
           </p>
         )}
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">Practice</h2>
+          {isOwner && (
+            <GenerateQuestionsButton
+              deckId={deckId}
+              disabled={!concepts || concepts.length === 0}
+            />
+          )}
+        </div>
+        <div className="rounded-[var(--radius-lg)] border border-border bg-card p-5">
+          {questionCount && questionCount > 0 ? (
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  {questionCount}
+                </span>{' '}
+                verified question{questionCount === 1 ? '' : 's'} ready — each
+                with the correct answer plus why every option is right or wrong.
+              </p>
+              <Link
+                href={`/decks/${deckId}/quiz`}
+                className="shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+              >
+                Take quiz
+              </Link>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {concepts && concepts.length > 0
+                ? 'No questions yet. Generate verified MCQs from this deck’s concepts.'
+                : 'Questions can be generated once documents are processed into concepts.'}
+            </p>
+          )}
+        </div>
       </section>
     </div>
   )

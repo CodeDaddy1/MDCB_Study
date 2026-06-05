@@ -46,3 +46,37 @@ export const termAnswerSchema = z.object({ definition: z.string() })
 
 export const shortAnswerPayloadSchema = z.object({ rubric: z.string() })
 export const shortAnswerAnswerSchema = z.object({ reference: z.string() })
+
+// ---- Quiz Generator: drafted MCQs with per-option reasoning ----
+// The model cites chunks by 1-based index into the provided context (more
+// reliable than echoing UUIDs); the agent maps indices back to chunk ids.
+export const generatedQuizSchema = z.object({
+  questions: z.array(
+    z.object({
+      prompt: z.string(),
+      options: z.array(
+        z.object({
+          text: z.string(),
+          is_correct: z.boolean(),
+          // why this option is correct, or specifically why it is wrong
+          rationale: z.string(),
+        }),
+      ),
+      // key teaching point — why the correct answer is correct
+      explanation: z.string(),
+      // 1-based indices into the provided source chunks that support the item
+      source_indices: z.array(z.number().int()),
+      difficulty: z.number().int().nullable(),
+    }),
+  ),
+})
+export type GeneratedQuiz = z.infer<typeof generatedQuizSchema>
+
+// Shape of a verified MCQ as stored in `questions` (payload + answer columns).
+export interface StoredMcqPayload {
+  options: string[]
+  rationales: string[]
+}
+export interface StoredMcqAnswer {
+  correct_index: number
+}

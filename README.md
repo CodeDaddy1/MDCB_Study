@@ -78,6 +78,17 @@ See `CLAUDE.md` (coding rules + the content/learning-state split) and
    `match_chunks` retrieval RPC (`0003`). Driven by
    `POST /api/documents/[id]/ingest` and the idempotent cron sweep
    `GET /api/cron/ingest`.
-4. Quiz generator + verifier (the four question types) — _next_
-5. Study loop UI (lazy daily quiz, four renderers, grading)
+4. Quiz generator + verifier ✅ (MCQ) — `lib/agents/quiz-generator.ts`: drafts
+   board-style MCQs grounded in handouts + answer-key chunks, each option with a
+   rationale (why correct / why wrong), Verifier-checked before storage
+   (`verified=true`). Trigger: `POST /api/decks/[deckId]/generate` (owner-gated).
+   Other three question types still to add.
+5. Study loop UI — _partial_: `/decks/[deckId]/quiz` renders verified MCQs with
+   per-option reasoning + score. FSRS-driven daily selection still to add.
 6. Progress layer (FSRS mastery, calendar, streaks, scores, growth charts)
+
+### Seeding from local PDFs
+`scripts/seed-deck.mjs` bulk-uploads the local MDCB PDFs into a deck and drives
+ingestion through `/api/cron/ingest` (needs the app running with AI keys). See
+the script header for usage. `scripts/extract-pdf.mjs` dumps a PDF's text per
+page (debugging / offline study).
